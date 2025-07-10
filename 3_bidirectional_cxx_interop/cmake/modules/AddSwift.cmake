@@ -48,7 +48,9 @@ function(_swift_generate_cxx_header target header)
   cmake_path(APPEND base_path ${header}
     OUTPUT_VARIABLE header_path)
 
-  set(_AllSources $<TARGET_PROPERTY:${target},SOURCES>)
+  cmake_path(APPEND CMAKE_CURRENT_BINARY_DIR "${ARG_MODULE_NAME}.emit-module.d" OUTPUT_VARIABLE depfile_path)
+
+  set(_AllSources $<PATH:ABSOLUTE_PATH,$<TARGET_PROPERTY:${target},SOURCES>,${CMAKE_CURRENT_SOURCE_DIR}>)
   set(_SwiftSources $<FILTER:${_AllSources},INCLUDE,\\.swift$>)
   add_custom_command(OUTPUT ${header_path}
     DEPENDS ${_SwiftSources}
@@ -61,6 +63,9 @@ function(_swift_generate_cxx_header target header)
       -module-name "${ARG_MODULE_NAME}"
       -cxx-interoperability-mode=default
       -emit-clang-header-path ${header_path}
+      -emit-dependencies
+    DEPFILE "${depfile_path}"
+    WORKING_DIRECTORY ${CMAKE_CURRENT_BINARY_DIR}
     COMMENT
       "Generating '${header_path}'"
     COMMAND_EXPAND_LISTS)
