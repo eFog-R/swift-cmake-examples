@@ -48,12 +48,9 @@ function(_swift_generate_cxx_header target header)
   cmake_path(APPEND base_path ${header}
     OUTPUT_VARIABLE header_path)
 
-  # Work out the name of the .d file that swiftc will emit
-  get_target_property(module_name ${target} Swift_MODULE_NAME)
-  set(depfile_name "${module_name}.emit-module.d")
-  cmake_path(APPEND CMAKE_CURRENT_BINARY_DIR ${depfile_name} OUTPUT_VARIABLE depfile_path)
+  cmake_path(APPEND CMAKE_CURRENT_BINARY_DIR "${ARG_MODULE_NAME}.emit-module.d" OUTPUT_VARIABLE depfile_path)
 
-  set(_AllSources $<TARGET_PROPERTY:${target},SOURCES>)
+  set(_AllSources $<PATH:ABSOLUTE_PATH,$<TARGET_PROPERTY:${target},SOURCES>,${CMAKE_CURRENT_SOURCE_DIR}>)
   set(_SwiftSources $<FILTER:${_AllSources},INCLUDE,\\.swift$>)
   add_custom_command(OUTPUT ${header_path}
     DEPENDS ${_SwiftSources}
@@ -67,7 +64,8 @@ function(_swift_generate_cxx_header target header)
       -cxx-interoperability-mode=default
       -emit-clang-header-path ${header_path}
       -emit-dependencies
-    DEPFILE ${depfile_path}
+    DEPFILE "${depfile_path}"
+    WORKING_DIRECTORY ${CMAKE_CURRENT_BINARY_DIR}
     COMMENT
       "Generating '${header_path}'"
     COMMAND_EXPAND_LISTS)
